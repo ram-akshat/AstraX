@@ -6,6 +6,7 @@ import TrackBadge from "../ui/TrackBadge";
 import ConfidenceBadge from "../ui/ConfidenceBadge";
 import SourceCitationPopover from "../ui/SourceCitationPopover";
 import { mockFactSheet, type FactSheetData } from "../../data/mockCaseData";
+import { USE_MOCK_API } from "../../config";
 
 interface FactSheetProps {
     data?: FactSheetData;
@@ -16,12 +17,26 @@ interface FactSheetProps {
 }
 
 export default function FactSheet({
-    data = mockFactSheet,
+    data,
     caseId = "case-1",
     isEmbedded = false,
     showDiffIndicator = false,
     onJumpToSection,
 }: FactSheetProps) {
+    const emptyFactSheet: FactSheetData = {
+        caseId: caseId || "case-1",
+        firNumber: "No Case Record Selected",
+        track: 2,
+        triageReason: "Awaiting document ingestion.",
+                who: [],
+        what: [],
+        when: [],
+        where: [],
+        evidence: [],
+        knownRelationships: [],
+        openGaps: [],
+    };
+    const activeData = data || (USE_MOCK_API ? mockFactSheet : emptyFactSheet);
     // Collapsible states for all 7 sections
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
         who: false,
@@ -37,7 +52,7 @@ export default function FactSheet({
         setCollapsed((prev) => ({ ...prev, [sec]: !prev[sec] }));
     };
 
-    const isTrack1 = data.track === 1;
+    const isTrack1 = activeData.track === 1;
 
     const modalityIcons: Record<string, IconName> = {
         digital_text: "file-text",
@@ -58,10 +73,10 @@ export default function FactSheet({
                             <h2 className="text-xl font-bold text-surface-900 tracking-tight">
                                 Stage 5: Case Fact-Sheet
                             </h2>
-                            <TrackBadge track={data.track} triageReason={data.triageReason} />
+                            <TrackBadge track={activeData.track} triageReason={activeData.triageReason} />
                         </div>
                         <p className="text-xs font-mono text-surface-500">
-                            Identifier: <span className="text-surface-800">{data.firNumber}</span> • Standardized Case Record
+                            Identifier: <span className="text-surface-800">{activeData.firNumber}</span> • Standardized Case Record
                         </p>
                     </div>
 
@@ -78,19 +93,19 @@ export default function FactSheet({
 
                 <div className="mt-4 pt-3 border-t border-surface-200/80 text-xs text-surface-600 flex items-center gap-2">
                     <Icon name="radar" size={13} className="text-insignia-400 shrink-0" />
-                    <span><strong>Triage Rationale:</strong> {data.triageReason}</span>
+                    <span><strong>Triage Rationale:</strong> {activeData.triageReason}</span>
                 </div>
 
                 {/* Diff Indicator (for re-diffed views on new evidence) */}
-                {(showDiffIndicator || data.diffSummary) && data.diffSummary && (
+                {(showDiffIndicator || activeData.diffSummary) && activeData.diffSummary && (
                     <div className="mt-3 rounded-lg border border-insignia-500/40 bg-insignia-500/10 p-3 text-xs text-insignia-300 flex items-start gap-2.5">
                         <Icon name="refresh" size={14} className="text-insignia-400 shrink-0 mt-0.5" />
                         <div className="flex-1">
                             <span className="font-bold text-insignia-300">
-                                {data.diffSummary.updatedCount} facts updated since initial ingestion
+                                {activeData.diffSummary.updatedCount} facts updated since initial ingestion
                             </span>
                             <ul className="mt-1 space-y-0.5 list-disc list-inside text-surface-400 text-[11px]">
-                                {data.diffSummary.details.map((d, i) => (
+                                {activeData.diffSummary.details.map((d, i) => (
                                     <li key={i}>{d}</li>
                                 ))}
                             </ul>
@@ -138,7 +153,7 @@ export default function FactSheet({
                                     Who — Named Entities & Roles
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.who.length} individuals / phantoms identified)
+                                    ({activeData.who.length} individuals / phantoms identified)
                                 </span>
                             </div>
                             <Icon
@@ -150,7 +165,7 @@ export default function FactSheet({
 
                         {!collapsed.who && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-                                {data.who.map((person) => {
+                                {activeData.who.map((person) => {
                                     const isPhantom = person.isPhantom || person.role === "Unresolved-Phantom";
 
                                     return (
@@ -221,7 +236,7 @@ export default function FactSheet({
                                     What — Offences & Statutory Sections (BNS 2023)
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.what.length} statutory charges)
+                                    ({activeData.what.length} statutory charges)
                                 </span>
                             </div>
                             <Icon
@@ -233,7 +248,7 @@ export default function FactSheet({
 
                         {!collapsed.what && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 space-y-3 mt-3">
-                                {data.what.map((item, idx) => (
+                                {activeData.what.map((item, idx) => (
                                     <div
                                         key={idx}
                                         className="rounded-lg border border-surface-300 bg-surface-0/70 p-3.5 text-xs flex flex-col gap-2"
@@ -278,7 +293,7 @@ export default function FactSheet({
                                     When — Incident Chronology Highlights
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.when.length} key timestamps)
+                                    ({activeData.when.length} key timestamps)
                                 </span>
                             </div>
                             <Icon
@@ -291,7 +306,7 @@ export default function FactSheet({
                         {!collapsed.when && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 space-y-2 mt-3">
                                 <div className="space-y-2 font-mono text-xs">
-                                    {data.when.map((event, idx) => (
+                                    {activeData.when.map((event, idx) => (
                                         <div
                                             key={idx}
                                             className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg border border-surface-300 bg-surface-0/60"
@@ -342,7 +357,7 @@ export default function FactSheet({
                                     Where — Geographical Footprint & Jurisdictions
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.where.length} locations mapped)
+                                    ({activeData.where.length} locations mapped)
                                 </span>
                             </div>
                             <Icon
@@ -354,7 +369,7 @@ export default function FactSheet({
 
                         {!collapsed.where && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                                {data.where.map((loc, idx) => (
+                                {activeData.where.map((loc, idx) => (
                                     <div
                                         key={idx}
                                         className="rounded-lg border border-surface-300 bg-surface-0/70 p-3 text-xs flex flex-col justify-between gap-2"
@@ -397,7 +412,7 @@ export default function FactSheet({
                                     Evidence on File — Ingestion Verification
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.evidence.length} files parsed)
+                                    ({activeData.evidence.length} files parsed)
                                 </span>
                             </div>
                             <Icon
@@ -409,7 +424,7 @@ export default function FactSheet({
 
                         {!collapsed.evidence && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 space-y-2 mt-3">
-                                {data.evidence.map((item) => (
+                                {activeData.evidence.map((item) => (
                                     <div
                                         key={item.id}
                                         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border border-surface-300 bg-surface-0/70 text-xs"
@@ -463,7 +478,7 @@ export default function FactSheet({
                                     Known Relationships — Evidentiary Graph Base
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.knownRelationships.length} verified connections • no hypotheses)
+                                    ({activeData.knownRelationships.length} verified connections • no hypotheses)
                                 </span>
                             </div>
                             <Icon
@@ -475,7 +490,7 @@ export default function FactSheet({
 
                         {!collapsed.relationships && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 space-y-2 mt-3">
-                                {data.knownRelationships.map((rel) => (
+                                {activeData.knownRelationships.map((rel) => (
                                     <div
                                         key={rel.id}
                                         className="flex items-center justify-between p-2.5 rounded-lg border border-surface-300 bg-surface-0/60 text-xs font-mono"
@@ -507,7 +522,7 @@ export default function FactSheet({
                                     Open Gaps — Investigative Deficits & Phantom Entities
                                 </h3>
                                 <span className="text-xs font-mono text-surface-500">
-                                    ({data.openGaps.length} unresolved slots linking to Lead Board)
+                                    ({activeData.openGaps.length} unresolved slots linking to Lead Board)
                                 </span>
                             </div>
                             <Icon
@@ -519,7 +534,7 @@ export default function FactSheet({
 
                         {!collapsed.gaps && (
                             <div className="p-4 pt-0 border-t border-surface-200/70 space-y-3 mt-3">
-                                {data.openGaps.map((gap) => (
+                                {activeData.openGaps.map((gap) => (
                                     <div
                                         key={gap.id}
                                         className="rounded-lg border border-purple-500/40 bg-purple-950/20 border-dashed p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"

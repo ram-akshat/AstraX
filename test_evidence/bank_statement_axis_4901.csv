@@ -1,0 +1,8 @@
+Date,Transaction ID,Description,Withdrawal (INR),Deposit (INR),Balance (INR),Channel,Location
+2026-03-01,TXN9948102,IMPS Transfer from Irfan K.,0.00,240000.00,240000.00,IMPS/NetBanking,New Delhi
+2026-03-02,TXN9948211,ATM Cash Withdrawal,49500.00,0.00,190500.00,ATM-4421,Kashmere Gate
+2026-03-02,TXN9948212,ATM Cash Withdrawal,49500.00,0.00,141000.00,ATM-4422,Kashmere Gate
+2026-03-03,TXN9948301,UPI Transfer to Shell Logistics,45000.00,0.00,96000.00,UPI,Okhla Phase 2
+2026-03-03,TXN9948309,ATM Cash Withdrawal,48000.00,0.00,48000.00,ATM-1082,Chandni Chowk
+2026-03-04,TXN9948415,Cash Deposit by Unknown Courier,0.00,450000.00,498000.00,CDM Branch,North Delhi
+2026-03-04,TXN9948490,NEFT Trf to Hawala Operator,490000.00,0.00,8000.00,NEFT,Noida Sector 18

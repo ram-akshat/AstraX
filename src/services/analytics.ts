@@ -198,13 +198,28 @@ export function normalizeMOMatch(m: any, idx = 0): MOMatch {
 }
 
 export function normalizeFactSheet(raw: any, caseId = "case-1", caseName = "Case Investigation"): FactSheetData {
-    if (!raw) return { ...mockFactSheet, caseId, firNumber: caseName };
+    if (!raw) {
+        return {
+            caseId,
+            firNumber: caseName,
+            track: 2,
+            triageReason: "Case evidence processing in progress or awaiting multi-stream ingestion.",
+            who: [],
+            what: [],
+            when: [],
+            where: [],
+            evidence: [],
+            knownRelationships: [],
+            openGaps: [],
+        };
+    }
 
-    const who = Array.isArray(raw.who) && raw.who.length > 0
+    const who = Array.isArray(raw.who)
         ? raw.who.map((w: any, idx: number) => ({
               id: w.id || `who-${idx + 1}`,
               name: w.name || "Unknown Suspect",
               role: (w.role || "Accused") as any,
+              isPhantom: Boolean(w.isPhantom || w.is_phantom),
               alias: w.alias || w.details,
               citation: w.citation || {
                   documentTitle: "FIR Ingestion Record",
@@ -212,15 +227,71 @@ export function normalizeFactSheet(raw: any, caseId = "case-1", caseName = "Case
                   rawSnippet: `${w.name} (${w.role || "Accused"})`,
               },
           }))
-        : mockFactSheet.who;
+        : [];
+
+    const what = Array.isArray(raw.what)
+        ? raw.what.map((item: any) => ({
+              bnsSection: item.bnsSection || item.section || "BNS §111",
+              statuteName: item.statuteName || item.statute || "Organized Crime Syndicate",
+              description: item.description || "",
+              applicableTo: item.applicableTo || "",
+              citation: item.citation || {
+                  documentTitle: "Statutory Classification",
+                  confidenceScore: 0.9,
+              },
+          }))
+        : [];
+
+    const when = Array.isArray(raw.when)
+        ? raw.when.map((item: any) => ({
+              timestamp: item.timestamp || new Date().toISOString(),
+              event: item.event || "",
+              location: item.location || "",
+              citation: item.citation || {
+                  documentTitle: "Temporal Timeline",
+                  confidenceScore: 0.9,
+              },
+          }))
+        : [];
+
+    const where = Array.isArray(raw.where)
+        ? raw.where.map((item: any) => ({
+              locationName: item.locationName || item.location || "",
+              jurisdiction: item.jurisdiction || "Special Operations",
+              significance: item.significance || "Incident Location",
+              coordinates: (Array.isArray(item.coordinates) && item.coordinates.length === 2 ? item.coordinates : [28.6139, 77.2090]) as [number, number],
+              citation: item.citation || {
+                  documentTitle: "Geospatial Analysis",
+                  confidenceScore: 0.9,
+              },
+          }))
+        : [];
+
+    const evidence = Array.isArray(raw.evidence) ? raw.evidence : [];
+    const knownRelationships = Array.isArray(raw.knownRelationships)
+        ? raw.knownRelationships
+        : Array.isArray(raw.relationships)
+        ? raw.relationships
+        : [];
+    const openGaps = Array.isArray(raw.openGaps)
+        ? raw.openGaps
+        : Array.isArray(raw.gaps)
+        ? raw.gaps
+        : [];
 
     return {
-        ...mockFactSheet,
         caseId,
         firNumber: raw.fir_number || raw.case_summary || caseName,
-        who,
         track: (raw.track as 1 | 2) || 2,
-        triageReason: raw.preliminary_working_hypothesis || raw.triage_reason || mockFactSheet.triageReason,
+        triageReason: raw.preliminary_working_hypothesis || raw.triage_reason || "Multi-channel evidence processed.",
+        diffSummary: raw.diffSummary,
+        who,
+        what,
+        when,
+        where,
+        evidence,
+        knownRelationships,
+        openGaps,
     };
 }
 
@@ -238,101 +309,48 @@ export async function triggerHistoricalAnalysis(
     if (USE_MOCK_API) {
         return {
             case_id: caseId,
-            total_entities: 8,
-            total_documents_analyzed: 4,
-            cross_case_connections: 3,
-            priority_leads: mockPhantomLeads.map((l) => ({
-                entity_id: l.id,
-                display_name: l.title,
-                score: l.confidenceScore,
-                components: {
-                    gnn_probability: 0.85,
-                    centrality: 0.72,
-                    mo_similarity: 0.65,
-                    direct_evidence: 0.8,
-                    recidivism: 0.1,
-                },
-            })),
-            theories: mockTheories,
-            fact_sheet: mockFactSheet,
+            total_entities: 0,
+            total_documents_analyzed: 0,
+            cross_case_connections: 0,
+            priority_leads: [],
+            theories: [],
+            fact_sheet: null,
             gnn_predictions: [],
-            mo_matches: { matched_historical_cases: mockMOMatches },
-            entities: mockIdentityResolution.candidates,
+            mo_matches: { matched_historical_cases: [] },
+            entities: [],
             analyzed_at: new Date().toISOString(),
         };
     }
 
-    try {
-        const raw = await apiRequest<any>(`/api/cases/${caseId}/analyze-historical`, {
-            method: "POST",
-        });
+    const raw = await apiRequest<any>(`/api/cases/${caseId}/analyze-historical`, {
+        method: "POST",
+    });
 
-        const rawTheories = Array.isArray(raw.theories) ? raw.theories : [];
-        const theories = rawTheories.length > 0
-            ? rawTheories.map((t: any, i: number) => normalizeCrimeTheory(t, i))
-            : mockTheories;
+    const rawTheories = Array.isArray(raw.theories) ? raw.theories : [];
+    const theories = rawTheories.map((t: any, i: number) => normalizeCrimeTheory(t, i));
 
-        const rawMOMatches = raw.mo_matches?.matched_historical_cases || [];
-        const matchedCases = Array.isArray(rawMOMatches) && rawMOMatches.length > 0
-            ? rawMOMatches.map((m: any, i: number) => normalizeMOMatch(m, i))
-            : mockMOMatches;
+    const rawMOMatches = raw.mo_matches?.matched_historical_cases || (Array.isArray(raw.mo_matches) ? raw.mo_matches : []);
+    const matchedCases = Array.isArray(rawMOMatches)
+        ? rawMOMatches.map((m: any, i: number) => normalizeMOMatch(m, i))
+        : [];
 
-        const factSheet = raw.fact_sheet
-            ? normalizeFactSheet(raw.fact_sheet, caseId, raw.case_name)
-            : mockFactSheet;
+    const factSheet = raw.fact_sheet
+        ? normalizeFactSheet(raw.fact_sheet, caseId, raw.case_name)
+        : null;
 
-        return {
-            case_id: raw.case_id || caseId,
-            total_entities: raw.total_entities || 8,
-            total_documents_analyzed: raw.total_documents_analyzed || 4,
-            cross_case_connections: raw.cross_case_connections || 3,
-            priority_leads: Array.isArray(raw.priority_leads) && raw.priority_leads.length > 0
-                ? raw.priority_leads
-                : mockPhantomLeads.map((l) => ({
-                      entity_id: l.id,
-                      display_name: l.title,
-                      score: l.confidenceScore,
-                      components: {
-                          gnn_probability: 0.85,
-                          centrality: 0.72,
-                          mo_similarity: 0.65,
-                          direct_evidence: 0.8,
-                          recidivism: 0.1,
-                      },
-                  })),
-            theories,
-            fact_sheet: factSheet,
-            gnn_predictions: raw.gnn_predictions || [],
-            mo_matches: { matched_historical_cases: matchedCases },
-            analyzed_at: raw.analyzed_at || new Date().toISOString(),
-        };
-    } catch {
-        // Resilient fallback to high-fidelity mock dossier
-        return {
-            case_id: caseId,
-            total_entities: 8,
-            total_documents_analyzed: 4,
-            cross_case_connections: 3,
-            priority_leads: mockPhantomLeads.map((l) => ({
-                entity_id: l.id,
-                display_name: l.title,
-                score: l.confidenceScore,
-                components: {
-                    gnn_probability: 0.85,
-                    centrality: 0.72,
-                    mo_similarity: 0.65,
-                    direct_evidence: 0.8,
-                    recidivism: 0.1,
-                },
-            })),
-            theories: mockTheories,
-            fact_sheet: mockFactSheet,
-            gnn_predictions: [],
-            mo_matches: { matched_historical_cases: mockMOMatches },
-            entities: mockIdentityResolution.candidates,
-            analyzed_at: new Date().toISOString(),
-        };
-    }
+    return {
+        case_id: raw.case_id || caseId,
+        total_entities: raw.total_entities ?? 0,
+        total_documents_analyzed: raw.total_documents_analyzed ?? 0,
+        cross_case_connections: raw.cross_case_connections ?? 0,
+        priority_leads: Array.isArray(raw.priority_leads) ? raw.priority_leads : [],
+        theories,
+        fact_sheet: factSheet,
+        gnn_predictions: raw.gnn_predictions || [],
+        mo_matches: { matched_historical_cases: matchedCases },
+        entities: Array.isArray(raw.entities) ? raw.entities : [],
+        analyzed_at: raw.analyzed_at || new Date().toISOString(),
+    };
 }
 
 /**
@@ -386,19 +404,12 @@ export async function getCaseGraph(caseId: string): Promise<GraphData> {
  */
 export async function getCaseTheories(caseId: string): Promise<CrimeTheory[]> {
     if (USE_MOCK_API) {
-        return mockTheories;
+        return [];
     }
 
-    try {
-        const raw: any = await apiRequest<any>(`/api/cases/${caseId}/theories`);
-        const list = Array.isArray(raw) ? raw : (raw?.theories || []);
-        if (list.length > 0) {
-            return list.map((t: any, i: number) => normalizeCrimeTheory(t, i));
-        }
-        return mockTheories;
-    } catch {
-        return mockTheories;
-    }
+    const raw: any = await apiRequest<any>(`/api/cases/${caseId}/theories`);
+    const list = Array.isArray(raw) ? raw : (raw?.theories || []);
+    return list.map((t: any, i: number) => normalizeCrimeTheory(t, i));
 }
 
 /**
@@ -410,34 +421,13 @@ export async function getCaseEntities(
     if (USE_MOCK_API) {
         return {
             case_id: caseId,
-            case_name: "FIR Investigation",
-            total_entities: mockIdentityResolution.candidates.length,
-            entities: mockIdentityResolution.candidates.map((c) => ({
-                entity_id: c.id,
-                entity_type: "person",
-                display_name: c.name,
-                source_documents: [c.source],
-                connections_count: c.matchingAttributes.length,
-            })),
+            case_name: "Case Investigation",
+            total_entities: 0,
+            entities: [],
         };
     }
 
-    try {
-        return await apiRequest<CaseEntitiesResponse>(`/api/cases/${caseId}/entities`);
-    } catch {
-        return {
-            case_id: caseId,
-            case_name: "FIR Investigation",
-            total_entities: mockIdentityResolution.candidates.length,
-            entities: mockIdentityResolution.candidates.map((c) => ({
-                entity_id: c.id,
-                entity_type: "person",
-                display_name: c.name,
-                source_documents: [c.source],
-                connections_count: c.matchingAttributes.length,
-            })),
-        };
-    }
+    return await apiRequest<CaseEntitiesResponse>(`/api/cases/${caseId}/entities`);
 }
 
 /**
@@ -446,33 +436,10 @@ export async function getCaseEntities(
 export async function getCrossCaseConnections(): Promise<CrossCaseResponse> {
     if (USE_MOCK_API) {
         return {
-            total_cross_case_entities: 1,
-            connections: [
-                {
-                    entity_id: "ENT-RAJESH",
-                    display_name: "Rajesh Sharma",
-                    entity_type: "person",
-                    appearing_in_cases: ["FIR 101/2026", "FIR 882/2025"],
-                    total_appearances: 2,
-                },
-            ],
+            total_cross_case_entities: 0,
+            connections: [],
         };
     }
 
-    try {
-        return await apiRequest<CrossCaseResponse>("/api/analysis/cross-case-connections");
-    } catch {
-        return {
-            total_cross_case_entities: 1,
-            connections: [
-                {
-                    entity_id: "ENT-RAJESH",
-                    display_name: "Rajesh Sharma",
-                    entity_type: "person",
-                    appearing_in_cases: ["FIR 101/2026", "FIR 882/2025"],
-                    total_appearances: 2,
-                },
-            ],
-        };
-    }
+    return await apiRequest<CrossCaseResponse>("/api/analysis/cross-case-connections");
 }

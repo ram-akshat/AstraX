@@ -16,11 +16,13 @@ interface LeadBoardProps {
     data?: PhantomLead[];
 }
 
+import { USE_MOCK_API } from "../../../config";
+
 export default function LeadBoard({ onSelectLead, data }: LeadBoardProps) {
-    const [leads, setLeads] = useState<PhantomLead[]>(data || mockPhantomLeads);
+    const [leads, setLeads] = useState<PhantomLead[]>(data !== undefined ? data : (USE_MOCK_API ? mockPhantomLeads : []));
 
     useEffect(() => {
-        if (data && data.length > 0) {
+        if (data !== undefined) {
             setLeads(data);
         }
     }, [data]);

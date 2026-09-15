@@ -10,14 +10,16 @@ interface TheoryBoardProps {
     data?: CrimeTheory[];
 }
 
+import { USE_MOCK_API } from "../../../config";
+
 export default function TheoryBoard({ onJumpToLead, data }: TheoryBoardProps) {
-    const [theories, setTheories] = useState<CrimeTheory[]>(data || mockTheories);
-    const [activeVersion, setActiveVersion] = useState<string>("v2");
+    const [theories, setTheories] = useState<CrimeTheory[]>(data !== undefined ? data : (USE_MOCK_API ? mockTheories : []));
+    const [activeVersion, setActiveVersion] = useState<string>(data && data[0] ? data[0].version : "v1");
 
     useEffect(() => {
-        if (data && data.length > 0) {
+        if (data !== undefined) {
             setTheories(data);
-            setActiveVersion(data[0].version);
+            if (data[0]) setActiveVersion(data[0].version);
         }
     }, [data]);
 

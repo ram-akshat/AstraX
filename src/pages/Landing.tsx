@@ -352,9 +352,7 @@ export default function Landing() {
             <footer className="border-t border-surface-200/30 bg-surface-50/30 py-8 text-surface-500 text-[10px]">
                 <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div className="flex items-center gap-2.5">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-insignia-500/10 border border-insignia-500/20 text-insignia-400">
-                            <Icon name="shield" size={12} />
-                        </div>
+                        <img src="/astrax-logo.png" alt="AstraX Logo" className="h-6 w-6 rounded object-contain" onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }} />
                         <span className="font-extrabold text-surface-900 text-xs tracking-tight">ASTRA<span className="text-insignia-400">X</span></span>
                         <span className="font-mono text-[9px] text-surface-500">│ Tactical Intelligence Platform</span>
                     </div>

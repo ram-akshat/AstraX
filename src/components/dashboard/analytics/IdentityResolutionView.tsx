@@ -9,10 +9,11 @@ interface IdentityResolutionViewProps {
     data?: typeof mockIdentityResolution;
 }
 
-export default function IdentityResolutionView({ onSelectCandidate, data }: IdentityResolutionViewProps) {
-    const activeData = data || mockIdentityResolution;
-    const [selectedCand, setSelectedCand] = useState(activeData.candidates[0]?.id || "cand-1");
+import { USE_MOCK_API } from "../../../config";
 
+export default function IdentityResolutionView({ onSelectCandidate, data }: IdentityResolutionViewProps) {
+    const activeData = data !== undefined ? data : (USE_MOCK_API ? mockIdentityResolution : { target: "No target", candidates: [] });
+    const [selectedCand, setSelectedCand] = useState(activeData.candidates[0]?.id || "cand-1");
     useEffect(() => {
         if (data && data.candidates?.length > 0) {
             setSelectedCand(data.candidates[0].id);

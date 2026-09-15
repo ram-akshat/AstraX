@@ -5,12 +5,20 @@ import ConfidenceBadge from "../../ui/ConfidenceBadge";
 import SourceCitationPopover from "../../ui/SourceCitationPopover";
 import Icon from "../../ui/Icon";
 
-export default function TimelineView({ onSelect }: { onSelect?: (item: any) => void }) {
+import { USE_MOCK_API } from "../../../config";
+
+interface TimelineViewProps {
+    onSelect?: (item: any) => void;
+    events?: typeof mockTimeline;
+}
+
+export default function TimelineView({ onSelect, events }: TimelineViewProps) {
     const [filter, setFilter] = useState("all");
+    const activeEvents = events !== undefined ? events : (USE_MOCK_API ? mockTimeline : []);
 
     const filtered = filter === "all" 
-        ? mockTimeline 
-        : mockTimeline.filter(t => t.type === filter);
+        ? activeEvents 
+        : activeEvents.filter(t => t.type === filter);
 
     const sorted = [...filtered].sort(
         (a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime()

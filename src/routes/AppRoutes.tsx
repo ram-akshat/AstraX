@@ -13,6 +13,7 @@ export default function AppRoutes() {
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<EvidenceIntake />} />
             <Route path="/intake/:caseId/summary" element={<ExtractionSummary />} />
+            <Route path="/cases/:caseId/summary" element={<ExtractionSummary />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/cases/:caseId" element={<CaseView />} />
 

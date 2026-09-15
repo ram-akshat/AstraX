@@ -32,13 +32,11 @@ export default function Navbar() {
     });
 
     return (
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-surface-300/60 bg-surface-50/95 px-4 z-30 font-sans backdrop-blur-sm">
+        <header className="flex h-13 shrink-0 items-center justify-between border-b border-surface-300/60 bg-surface-50/95 px-4 z-30 font-sans backdrop-blur-md">
             {/* Left: Logo + Nav */}
             <div className="flex items-center gap-5">
                 <Link to="/" className="flex items-center gap-2.5 group">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-insignia-500/12 border border-insignia-500/30 text-insignia-400 group-hover:border-insignia-500/50 transition-colors">
-                        <Icon name="shield" size={14} />
-                    </div>
+                    <img src="/astrax-logo.png" alt="AstraX Logo" className="h-7 w-7 rounded-md object-contain group-hover:scale-105 transition-transform" onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none'; }} />
                     <div className="flex flex-col">
                         <span className="text-sm font-extrabold tracking-tight text-surface-900 leading-none flex items-center gap-1.5">
                             <span>ASTRA</span>
@@ -54,13 +52,13 @@ export default function Navbar() {
                 <div className="h-5 w-px bg-surface-300/50" />
 
                 {/* Primary Nav */}
-                <nav className="hidden sm:flex items-center gap-0.5 font-mono text-[11px]">
+                <nav className="hidden sm:flex items-center gap-1 font-mono text-[11px]">
                     <Link
                         to="/intake"
                         className={`px-2.5 py-1 rounded transition-colors ${
                             isActive("/intake")
-                                ? "bg-insignia-500/12 text-insignia-400 font-bold"
-                                : "text-surface-500 hover:text-surface-300 hover:bg-surface-200/40"
+                                ? "bg-insignia-500/12 text-insignia-400 font-bold border border-insignia-500/20"
+                                : "text-surface-400 hover:text-surface-200 hover:bg-surface-200/40"
                         }`}
                     >
                         Evidence Intake
@@ -69,8 +67,8 @@ export default function Navbar() {
                         to="/dashboard"
                         className={`px-2.5 py-1 rounded transition-colors ${
                             isActive("/dashboard") || isActive("/cases")
-                                ? "bg-insignia-500/12 text-insignia-400 font-bold"
-                                : "text-surface-500 hover:text-surface-300 hover:bg-surface-200/40"
+                                ? "bg-insignia-500/12 text-insignia-400 font-bold border border-insignia-500/20"
+                                : "text-surface-400 hover:text-surface-200 hover:bg-surface-200/40"
                         }`}
                     >
                         Case Directory
@@ -81,10 +79,10 @@ export default function Navbar() {
             {/* Right: Status + Actions */}
             <div className="flex items-center gap-3 text-[10px] font-mono">
                 {/* System Status Strip */}
-                <div className="hidden lg:flex items-center gap-3 text-surface-500 mr-2">
+                <div className="hidden lg:flex items-center gap-3 text-surface-400 mr-2">
                     <div className="flex items-center gap-1.5">
                         <span className="status-dot-online" />
-                        <span>CORE</span>
+                        <span>AIR-GAPPED CORE</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                         <span className="status-dot-online" />
@@ -109,7 +107,7 @@ export default function Navbar() {
                 {/* New Intake CTA */}
                 <Link
                     to="/intake"
-                    className="inline-flex items-center gap-1.5 rounded-md bg-insignia-500/90 hover:bg-insignia-400 text-surface-0 font-bold px-3 py-1.5 text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-insignia-500 hover:bg-insignia-400 text-surface-0 font-bold px-3 py-1.5 text-[11px] transition-colors shadow cursor-pointer"
                 >
                     <Icon name="plus" size={11} />
                     <span>New Intake</span>

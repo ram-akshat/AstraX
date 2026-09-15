@@ -9,14 +9,16 @@ interface MOMatchListProps {
     data?: MOMatch[];
 }
 
+import { USE_MOCK_API } from "../../../config";
+
 export default function MOMatchList({ onSelectMatch, data }: MOMatchListProps) {
-    const [matches, setMatches] = useState<MOMatch[]>(data || mockMOMatches);
-    const [expandedId, setExpandedId] = useState<string | null>("mo-1");
+    const [matches, setMatches] = useState<MOMatch[]>(data !== undefined ? data : (USE_MOCK_API ? mockMOMatches : []));
+    const [expandedId, setExpandedId] = useState<string | null>(data && data[0] ? data[0].id : (USE_MOCK_API ? "mo-1" : null));
 
     useEffect(() => {
-        if (data && data.length > 0) {
+        if (data !== undefined) {
             setMatches(data);
-            setExpandedId(data[0].id);
+            if (data[0]) setExpandedId(data[0].id);
         }
     }, [data]);
 
